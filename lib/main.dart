@@ -25,6 +25,7 @@ class _CardMatchingGameState extends State<CardMatchingGame> {
   late List<CardModel> cards;
   int _firstSelectedIndex = -1;
   int _secondSelectedIndex = -1;
+  bool _isChecking = false; // Flag to avoid multiple taps during check
   int score = 0;
 
   @override
@@ -54,11 +55,18 @@ class _CardMatchingGameState extends State<CardMatchingGame> {
     ];
     cards.shuffle();
     score = 0; // Reset score
+    _firstSelectedIndex = -1;
+    _secondSelectedIndex = -1;
+    _isChecking = false; // Reset the checking flag
   }
 
   // Function to check if two selected cards match
-  void _checkForMatch() {
+  void _checkForMatch() async {
     if (_firstSelectedIndex != -1 && _secondSelectedIndex != -1) {
+      setState(() {
+        _isChecking = true; // Set flag to prevent taps during check
+      });
+
       if (cards[_firstSelectedIndex].imageAssetPath ==
           cards[_secondSelectedIndex].imageAssetPath) {
         setState(() {
@@ -67,22 +75,25 @@ class _CardMatchingGameState extends State<CardMatchingGame> {
           score += 10; // Increase score when match is found
         });
       } else {
-        Future.delayed(Duration(seconds: 1), () {
-          setState(() {
-            cards[_firstSelectedIndex].isFaceUp = false;
-            cards[_secondSelectedIndex].isFaceUp = false;
-          });
+        // Delay the face-down flip after a short delay if cards don't match
+        await Future.delayed(Duration(seconds: 1));
+        setState(() {
+          cards[_firstSelectedIndex].isFaceUp = false;
+          cards[_secondSelectedIndex].isFaceUp = false;
         });
       }
-      _firstSelectedIndex = -1;
-      _secondSelectedIndex = -1;
+      setState(() {
+        _firstSelectedIndex = -1;
+        _secondSelectedIndex = -1;
+        _isChecking = false; // Reset flag after check is done
+      });
     }
   }
 
   // Function to handle when a card is tapped
   void _onCardTapped(int index) {
-    if (cards[index].isFaceUp || cards[index].isMatched) {
-      return; // Ignore taps on already face-up or matched cards
+    if (_isChecking || cards[index].isFaceUp || cards[index].isMatched) {
+      return; // Ignore taps during checking, or on already face-up or matched cards
     }
     setState(() {
       cards[index].isFaceUp = true;
