@@ -25,7 +25,7 @@ class _CardMatchingGameState extends State<CardMatchingGame> {
   late List<CardModel> cards;
   int _firstSelectedIndex = -1;
   int _secondSelectedIndex = -1;
-  bool _isChecking = false; // Flag to avoid multiple taps during check
+  bool _isChecking = false;
   int score = 0;
 
   @override
@@ -54,17 +54,16 @@ class _CardMatchingGameState extends State<CardMatchingGame> {
       CardModel(imageAssetPath: 'assets/demonslayer.jpeg'),
     ];
     cards.shuffle();
-    score = 0; // Reset score
+    score = 0;
     _firstSelectedIndex = -1;
     _secondSelectedIndex = -1;
-    _isChecking = false; // Reset the checking flag
+    _isChecking = false;
   }
 
-  // Function to check if two selected cards match
   void _checkForMatch() async {
     if (_firstSelectedIndex != -1 && _secondSelectedIndex != -1) {
       setState(() {
-        _isChecking = true; // Set flag to prevent taps during check
+        _isChecking = true;
       });
 
       if (cards[_firstSelectedIndex].imageAssetPath ==
@@ -72,10 +71,9 @@ class _CardMatchingGameState extends State<CardMatchingGame> {
         setState(() {
           cards[_firstSelectedIndex].isMatched = true;
           cards[_secondSelectedIndex].isMatched = true;
-          score += 10; // Increase score when match is found
+          score += 10;
         });
       } else {
-        // Delay the face-down flip after a short delay if cards don't match
         await Future.delayed(Duration(seconds: 1));
         setState(() {
           cards[_firstSelectedIndex].isFaceUp = false;
@@ -85,15 +83,14 @@ class _CardMatchingGameState extends State<CardMatchingGame> {
       setState(() {
         _firstSelectedIndex = -1;
         _secondSelectedIndex = -1;
-        _isChecking = false; // Reset flag after check is done
+        _isChecking = false;
       });
     }
   }
 
-  // Function to handle when a card is tapped
   void _onCardTapped(int index) {
     if (_isChecking || cards[index].isFaceUp || cards[index].isMatched) {
-      return; // Ignore taps during checking, or on already face-up or matched cards
+      return;
     }
     setState(() {
       cards[index].isFaceUp = true;
@@ -101,12 +98,11 @@ class _CardMatchingGameState extends State<CardMatchingGame> {
         _firstSelectedIndex = index;
       } else {
         _secondSelectedIndex = index;
-        _checkForMatch(); // Check for match after selecting second card
+        _checkForMatch();
       }
     });
   }
 
-  // Function to check if all cards are matched (Victory condition)
   bool _checkForWin() {
     return cards.every((card) => card.isMatched);
   }
@@ -125,6 +121,35 @@ class _CardMatchingGameState extends State<CardMatchingGame> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Card(
+                  color: Colors.blueGrey[900],
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      children: [
+                        Text(
+                          'Name: Abhiram Gelle',
+                          style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white),
+                        ),
+                        SizedBox(height: 8),
+                        Text(
+                          'Panther ID: 002850818',
+                          style:
+                              TextStyle(fontSize: 16, color: Colors.grey[300]),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
               Padding(
                 padding: const EdgeInsets.all(10.0),
                 child: GridView.count(
@@ -148,7 +173,7 @@ class _CardMatchingGameState extends State<CardMatchingGame> {
                                       AssetImage(cards[index].imageAssetPath),
                                   fit: BoxFit.cover,
                                 )
-                              : null, // Show image only if card is face-up or matched
+                              : null,
                         ),
                         child: Center(
                           child: cards[index].isFaceUp || cards[index].isMatched
@@ -172,12 +197,12 @@ class _CardMatchingGameState extends State<CardMatchingGame> {
               ElevatedButton(
                 onPressed: () {
                   setState(() {
-                    _initializeCards(); // Reset the game
+                    _initializeCards();
                   });
                 },
                 child: Text('Restart Game'),
               ),
-              if (_checkForWin()) // Show victory message if all cards are matched
+              if (_checkForWin())
                 Padding(
                   padding: const EdgeInsets.all(20.0),
                   child: Text(
