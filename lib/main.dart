@@ -23,6 +23,9 @@ class CardMatchingGame extends StatefulWidget {
 
 class _CardMatchingGameState extends State<CardMatchingGame> {
   late List<CardModel> cards;
+  int _firstSelectedIndex = -1;
+  int _secondSelectedIndex = -1;
+  int score = 0;
 
   @override
   void initState() {
@@ -50,6 +53,43 @@ class _CardMatchingGameState extends State<CardMatchingGame> {
       CardModel(imageAssetPath: 'assets/demonslayer.jpeg'),
     ];
     cards.shuffle();
+    score = 0; // Reset score
+  }
+
+  void _checkForMatch() {
+    if (_firstSelectedIndex != -1 && _secondSelectedIndex != -1) {
+      if (cards[_firstSelectedIndex].imageAssetPath ==
+          cards[_secondSelectedIndex].imageAssetPath) {
+        setState(() {
+          cards[_firstSelectedIndex].isMatched = true;
+          cards[_secondSelectedIndex].isMatched = true;
+          score += 10; // Increase score when match is found
+        });
+      } else {
+        Future.delayed(Duration(seconds: 1), () {
+          setState(() {
+            cards[_firstSelectedIndex].isFaceUp = false;
+            cards[_secondSelectedIndex].isFaceUp = false;
+          });
+        });
+      }
+      _firstSelectedIndex = -1;
+      _secondSelectedIndex = -1;
+    }
+  }
+
+  void _onCardTapped(int index) {
+    if (cards[index].isFaceUp || cards[index].isMatched)
+      return; // Ignore already matched or face-up cards
+    setState(() {
+      cards[index].isFaceUp = true;
+      if (_firstSelectedIndex == -1) {
+        _firstSelectedIndex = index;
+      } else {
+        _secondSelectedIndex = index;
+        _checkForMatch(); // Check for a match after second card is selected
+      }
+    });
   }
 
   @override
@@ -63,47 +103,54 @@ class _CardMatchingGameState extends State<CardMatchingGame> {
           ),
         ),
         body: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(10.0),
-            child: GridView.count(
-              shrinkWrap: true,
-              crossAxisCount: 4,
-              mainAxisSpacing: 16.0,
-              crossAxisSpacing: 16.0,
-              children: List.generate(cards.length, (index) {
-                return GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      cards[index].isFaceUp =
-                          !cards[index].isFaceUp; // Flip card
-                    });
-                  },
-                  child: AnimatedContainer(
-                    duration:
-                        Duration(milliseconds: 300), // Animation for flipping
-                    decoration: BoxDecoration(
-                      color:
-                          cards[index].isFaceUp ? Colors.grey : Colors.yellow,
-                      borderRadius: BorderRadius.circular(8.0),
-                      image: cards[index].isFaceUp
-                          ? DecorationImage(
-                              image: AssetImage(cards[index].imageAssetPath),
-                              fit: BoxFit.cover,
-                            )
-                          : null, // Show image only if card is face-up
-                    ),
-                    child: Center(
-                      child: cards[index].isFaceUp
-                          ? null
-                          : Text(
-                              "Back",
-                              style: TextStyle(color: Colors.black),
-                            ),
-                    ),
-                  ),
-                );
-              }),
-            ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(10.0),
+                child: GridView.count(
+                  shrinkWrap: true,
+                  crossAxisCount: 4,
+                  mainAxisSpacing: 16.0,
+                  crossAxisSpacing: 16.0,
+                  children: List.generate(cards.length, (index) {
+                    return GestureDetector(
+                      onTap: () => _onCardTapped(index),
+                      child: AnimatedContainer(
+                        duration: Duration(
+                            milliseconds: 300), // Animation for flipping
+                        decoration: BoxDecoration(
+                          color: cards[index].isFaceUp || cards[index].isMatched
+                              ? Colors.grey
+                              : Colors.yellow, // Grey if face-up or matched
+                          borderRadius: BorderRadius.circular(8.0),
+                          image: cards[index].isFaceUp || cards[index].isMatched
+                              ? DecorationImage(
+                                  image:
+                                      AssetImage(cards[index].imageAssetPath),
+                                  fit: BoxFit.cover,
+                                )
+                              : null, // Show image if face-up or matched
+                        ),
+                        child: Center(
+                          child: cards[index].isFaceUp || cards[index].isMatched
+                              ? null
+                              : Text(
+                                  "Back",
+                                  style: TextStyle(color: Colors.black),
+                                ),
+                        ),
+                      ),
+                    );
+                  }),
+                ),
+              ),
+              SizedBox(height: 20),
+              Text(
+                'Score: $score',
+                style: TextStyle(fontSize: 24, color: Colors.white),
+              ),
+            ],
           ),
         ),
       ),
