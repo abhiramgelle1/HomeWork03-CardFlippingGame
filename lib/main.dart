@@ -56,6 +56,7 @@ class _CardMatchingGameState extends State<CardMatchingGame> {
     score = 0; // Reset score
   }
 
+  // Function to check if two selected cards match
   void _checkForMatch() {
     if (_firstSelectedIndex != -1 && _secondSelectedIndex != -1) {
       if (cards[_firstSelectedIndex].imageAssetPath ==
@@ -78,18 +79,25 @@ class _CardMatchingGameState extends State<CardMatchingGame> {
     }
   }
 
+  // Function to handle when a card is tapped
   void _onCardTapped(int index) {
-    if (cards[index].isFaceUp || cards[index].isMatched)
-      return; // Ignore already matched or face-up cards
+    if (cards[index].isFaceUp || cards[index].isMatched) {
+      return; // Ignore taps on already face-up or matched cards
+    }
     setState(() {
       cards[index].isFaceUp = true;
       if (_firstSelectedIndex == -1) {
         _firstSelectedIndex = index;
       } else {
         _secondSelectedIndex = index;
-        _checkForMatch(); // Check for a match after second card is selected
+        _checkForMatch(); // Check for match after selecting second card
       }
     });
+  }
+
+  // Function to check if all cards are matched (Victory condition)
+  bool _checkForWin() {
+    return cards.every((card) => card.isMatched);
   }
 
   @override
@@ -117,12 +125,11 @@ class _CardMatchingGameState extends State<CardMatchingGame> {
                     return GestureDetector(
                       onTap: () => _onCardTapped(index),
                       child: AnimatedContainer(
-                        duration: Duration(
-                            milliseconds: 300), // Animation for flipping
+                        duration: Duration(milliseconds: 300),
                         decoration: BoxDecoration(
                           color: cards[index].isFaceUp || cards[index].isMatched
                               ? Colors.grey
-                              : Colors.yellow, // Grey if face-up or matched
+                              : Colors.yellow,
                           borderRadius: BorderRadius.circular(8.0),
                           image: cards[index].isFaceUp || cards[index].isMatched
                               ? DecorationImage(
@@ -130,7 +137,7 @@ class _CardMatchingGameState extends State<CardMatchingGame> {
                                       AssetImage(cards[index].imageAssetPath),
                                   fit: BoxFit.cover,
                                 )
-                              : null, // Show image if face-up or matched
+                              : null, // Show image only if card is face-up or matched
                         ),
                         child: Center(
                           child: cards[index].isFaceUp || cards[index].isMatched
@@ -150,6 +157,23 @@ class _CardMatchingGameState extends State<CardMatchingGame> {
                 'Score: $score',
                 style: TextStyle(fontSize: 24, color: Colors.white),
               ),
+              SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: () {
+                  setState(() {
+                    _initializeCards(); // Reset the game
+                  });
+                },
+                child: Text('Restart Game'),
+              ),
+              if (_checkForWin()) // Show victory message if all cards are matched
+                Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Text(
+                    'You Win!',
+                    style: TextStyle(fontSize: 32, color: Colors.green),
+                  ),
+                ),
             ],
           ),
         ),
